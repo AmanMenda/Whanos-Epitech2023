@@ -1,0 +1,12 @@
+# syntax=docker/dockerfile:1
+FROM python:latest
+
+SHELL ["/bin/bash", "-c"]
+
+ONBUILD COPY . /app
+
+ONBUILD WORKDIR /app
+
+ONBUILD RUN pip install -r requirements.txt
+
+ONBUILD CMD ["python", "-m", "app"]

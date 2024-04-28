@@ -1,0 +1,14 @@
+# syntax=docker/dockerfile:1
+FROM node:20.9.0
+
+SHELL ["/bin/bash", "-c"]
+
+ONBUILD COPY . /app
+
+ONBUILD WORKDIR /app
+
+ONBUILD RUN npm install -g npm@10.2.4
+
+ONBUILD RUN npm install befunge93
+
+CMD ["node", "befCompiler.js", "app/main.bf"]

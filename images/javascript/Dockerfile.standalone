@@ -1,0 +1,10 @@
+# syntax=docker/dockerfile:1
+FROM node:20.9.0
+
+COPY . /app
+
+WORKDIR /app
+
+RUN npm install --production=false
+
+CMD ["node", "."]

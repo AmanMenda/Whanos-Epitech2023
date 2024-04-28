@@ -1,0 +1,10 @@
+configuration-as-code
+job-dsl
+script-security
+role-strategy
+parameterized-trigger
+github
+git
+kubernetes
+conditional-buildstep
+credentials

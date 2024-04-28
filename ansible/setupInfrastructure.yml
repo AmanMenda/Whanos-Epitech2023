@@ -1,0 +1,29 @@
+
+- hosts: master
+  become: yes
+  tasks:
+    - name: Read-write git checkout from github
+      ansible.builtin.git:
+        repo: git@github.com:EpitechPromo2026/B-DOP-500-COT-5-1-whanos-aman.menda.git
+        version: main
+        dest: /home/azureuser/whanos
+        accept_hostkey: yes
+        key_file: /home/azureuser/.ssh/id_rsa
+        force: yes
+
+    - name: Copy env file into server repo
+      copy:
+        src: /home/aman/B-DOP-500-COT-5-1-whanos-aman.menda/.env
+        dest: /home/azureuser/whanos/.env
+
+    - name: deploy Docker Compose stack
+      become: true
+      community.docker.docker_compose:
+        project_src: /home/azureuser/whanos
+        state: present
+        build: true
+        files:
+          - docker-compose.yml
+
+    - name: Install UFW firewall
+      apt: name=ufw update_cache=yes state=latest

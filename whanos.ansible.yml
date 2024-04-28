@@ -1,0 +1,58 @@
+---
+- hosts: # nom du server your_server
+  vars:
+    app_name: whanos
+    deployment_file: whanos.deployment.yml
+    service_file: whanos.service.yml
+  tasks:
+    - name: Install Docker
+      become: yes
+      apt:
+        name: docker.io
+        state: present
+        update_cache: yes
+
+    - name: Install Kubernetes
+      become: yes
+      shell: |
+        curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
+        echo "deb http://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee -a /etc/apt/sources.list.d/kubernetes.list
+        sudo apt-get update
+        sudo apt-get install -y kubelet kubeadm kubectl kubernetes-cni
+      args:
+        executable: /bin/bash
+
+    - name: Initialize Kubernetes cluster
+      become: yes
+      command: "kubeadm init --pod-network-cidr=10.244.0.0/16"
+      register: kubeadm_init_output
+
+    - name: Copy kubeadm join command
+      set_fact:
+        kubeadm_join_command: "{{ kubeadm_init_output.stdout_lines[-1] }}"
+
+    - name: Join other nodes to the cluster
+      become: yes
+      command: "{{ kubeadm_join_command }}"
+      when: inventory_hostname != your_server
+
+    - name: Copy kubeconfig file
+      become: yes
+      command: "mkdir -p $HOME/.kube && sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config && sudo chown $(id -u):$(id -g) $HOME/.kube/config"
+
+    - name: Install Flannel network plugin
+      become: yes
+      command: "kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml"
+
+    - name: Copy deployment file
+      copy:
+        src: "{{ deployment_file }}"
+        dest: "/home/{{ ansible_user }}/{{ deployment_file }}"
+
+    - name: Copy service file
+      copy:
+        src: "{{ service_file }}"
+        dest: "/home/{{ ansible_user }}/{{ service_file }}"
+
+    - name: Deploy application
+      command: "kubectl apply -f /home/{{ ansible_user }}/{{ deployment_file }} -f /home/{{ ansible_user }}/{{ service_file }}"

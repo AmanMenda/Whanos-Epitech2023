@@ -1,0 +1,12 @@
+# syntax=docker/dockerfile:1
+FROM gcc:13.2
+
+COPY . /app
+
+WORKDIR /app
+
+RUN make
+
+RUN rm -rf Makefile app
+
+CMD ["./compiled-app"]

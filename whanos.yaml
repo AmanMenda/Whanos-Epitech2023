@@ -1,0 +1,42 @@
+jenkins:
+  systemMessage: "Welcome to our Jenkins Instance"
+
+  securityRealm:
+    local:
+      allowsSignup: false
+      users:
+        - id: admin
+          name: Admin
+          password: ${ADMIN_PASSWORD}
+
+  authorizationStrategy:
+    roleBased:
+      roles:
+        global:
+          - name: "admin"
+            description: "Admin"
+            permissions:
+              - "Overall/Administer"
+            entries:
+              - user: "admin"
+
+credentials:
+  system:
+    domainCredentials:
+      - credentials:
+        - basicSSHUserPrivateKey:
+            scope: GLOBAL
+            id: github-ci-key
+            username: Admin
+            passphrase: ${SSH_KEY_PASSWORD}
+            description: "SSH passphrase with private key file. Private key provided"
+            privateKeySource:
+              directEntry:
+                privateKey: ${SSH_PRIVATE_KEY}
+
+security:
+  gitHostKeyVerificationConfiguration:
+    sshHostKeyVerificationStrategy: "acceptFirstConnectionStrategy"
+
+jobs:
+  - file: "/var/jenkins_home/job_dsl.groovy"
